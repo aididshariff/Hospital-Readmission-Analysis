@@ -2,11 +2,11 @@
 This project is an end-to-end data analysis and business intelligence case study focused on identifying and understanding the factors contributing to hospital readmissions. The goal is to transform raw patient data into actionable insights that can help improve healthcare outcomes and operational efficiency.
 
 # Project Objectives
-**Data Cleaning & Quality Assessment** : Thoroughly clean a raw hospital dataset, handling missing values, inconsistencies, and duplicates.
-**Data Transformation** : Engineer new features by grouping complex ICD-9 diagnosis codes into more readable, high-level categories.
-**Key Performance Indicator (KPI) Calculation**: Develop core business metrics such as Readmission Rate and High-Risk Patient percentages using Tableau.  
-**Descriptive Analysis** : Perform exploratory analysis to uncover trends related to patient demographics, diagnosis types, and length of stay.
-**Data Visualization** : Prepare a clean dataset suitable for ** Tableau ** to create a comprehensive, interactive dashboard.
+- **Data Cleaning & Quality Assessment** : Thoroughly clean a raw hospital dataset, handling missing values, inconsistencies, and duplicates.
+- **Data Transformation** : Engineer new features by grouping complex ICD-9 diagnosis codes into more readable, high-level categories.
+- **Key Performance Indicator (KPI) Calculation**: Develop core business metrics such as Readmission Rate and High-Risk Patient percentages using Tableau.  
+- **Descriptive Analysis** : Perform exploratory analysis to uncover trends related to patient demographics, diagnosis types, and length of stay.
+- **Data Visualization** : Prepare a clean dataset suitable for ** Tableau ** to create a comprehensive, interactive dashboard.
 
 # Technologies Used
 - **SQL** : The primary tool used for all data cleaning, transformation, and analysis. All queries are documented and organized for clarity.
