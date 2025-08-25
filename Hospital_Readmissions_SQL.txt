@@ -1,0 +1,201 @@
+--======================================================================================================================================================================
+-- Project: Hospital Readmissions Analysis
+-- Author: Aidid Shariff Alwi
+-- Description: An end-to-end SQL project for data cleaning, transformation, and descriptive analysis of a hospital readmissions dataset.
+-- This script is organized into three main sections:
+--   1. Data Quality and Cleaning
+--   2. Data Transformation (ICD-9 Grouping)
+--   3. Descriptive Analysis
+========================================================================================================================================================================
+
+========================================================================================================================================================================
+-- Section 1: Data Quality and Cleaning
+-- Purpose: Identify and handle missing values, duplicates, and create a cleaned version of the raw data.
+========================================================================================================================================================================
+
+-- 1.1 Initial Data Quality Check: Missing Values & Duplicates
+-- This query provides a high-level overview of missing values in key columns and identifies potential duplicate records based on `encounter_id` and `patient_nbr`.
+
+SELECT
+    -- Missing values count
+    SUM(CASE WHEN encounter_id IS NULL THEN 1 ELSE 0 END) AS missing_encounter_id,
+    SUM(CASE WHEN patient_nbr IS NULL THEN 1 ELSE 0 END) AS missing_patient_nbr,
+    SUM(CASE WHEN gender IS NULL OR gender = '?' THEN 1 ELSE 0 END) AS missing_gender,
+    SUM(CASE WHEN age IS NULL THEN 1 ELSE 0 END) AS missing_age,
+    SUM(CASE WHEN race = '?' THEN 1 ELSE 0 END) AS missing_race,
+    SUM(CASE WHEN weight = '?' THEN 1 ELSE 0 END) AS missing_weight,
+    SUM(CASE WHEN diag_1 = '?' THEN 1 ELSE 0 END) AS missing_diag_1,
+    SUM(CASE WHEN diag_2 = '?' THEN 1 ELSE 0 END) AS missing_diag_2,
+    SUM(CASE WHEN diag_3 = '?' THEN 1 ELSE 0 END) AS missing_diag_3,
+    -- Check for duplicates
+    (SELECT COUNT(*) FROM (
+        SELECT encounter_id, patient_nbr
+        FROM `my  project-1999-467013.Hospital_readmission.diabetic_data`
+        GROUP BY 1, 2
+        HAVING COUNT(*) > 1
+    )) AS total_duplicates
+FROM `my-project-1999-467013.Hospital_readmission.diabetic_data`;
+
+
+-- 1.2 Create Cleaned Base Table
+-- Creates a new table with cleaned versions of key categorical fields,
+-- handling `NULL` values and placeholders like '?'.
+-- Also, a more descriptive `readmitted_clean` column is created for better readability.
+
+CREATE OR REPLACE TABLE `my-project-1999-467013.Hospital_readmission.diabetic_data2` AS
+SELECT *,
+    CASE WHEN race = '?' THEN 'Unknown' ELSE race END AS race_clean,
+    CASE WHEN gender = '?' THEN 'Unknown' ELSE gender END AS gender_clean,
+    CASE WHEN weight = '?' THEN 'Unknown' ELSE weight END AS weight_clean,
+    CASE WHEN payer_code = '?' THEN 'Unknown' ELSE payer_code END AS payer_code_clean,
+    CASE WHEN medical_specialty = '?' THEN 'Unknown' ELSE medical_specialty END AS medical_specialty_clean,
+    CASE WHEN diag_1 = '?' THEN 'Unknown' ELSE diag_1 END AS diag_1_clean,
+    CASE WHEN diag_2 = '?' THEN 'Unknown' ELSE diag_2 END AS diag_2_clean,
+    CASE WHEN diag_3 = '?' THEN 'Unknown' ELSE diag_3 END AS diag_3_clean,
+    CASE
+        WHEN readmitted = '<30' THEN 'Readmitted within 30 days'
+        WHEN readmitted = 'NO' THEN 'Not readmitted'
+        WHEN readmitted = '>30' THEN 'Readmitted after 30 days'
+        ELSE 'Unknown'
+    END AS readmitted_clean
+FROM `my-project-1999-467013.Hospital_readmission.diabetic_data`;
+
+
+========================================================================================================================================================================
+-- Section 2: Data Transformation
+-- Purpose: Transform raw data into meaningful features for analysis, including grouping ICD-9 diagnosis codes into major categories.
+========================================================================================================================================================================
+
+-- 2.1 Final Cleaned Table with ICD-9 Categories
+-- This script creates the final table for analysis, joining diagnosis codes
+-- to broader ICD-9 categories and dropping irrelevant columns.
+
+CREATE OR REPLACE TABLE `my-project-1999-467013.Hospital_readmission.final_analysis_table` AS
+WITH icd_grouping AS (
+    SELECT *,  
+        CASE
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 1 AND 139 THEN 'Infectious & Parasitic'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 140 AND 239 THEN 'Neoplasms'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 240 AND 279 THEN 'Endocrine & Nutritional'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 280 AND 289 THEN 'Blood & Immune'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 290 AND 319 THEN 'Mental Disorders'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 320 AND 389 THEN 'Nervous System'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 390 AND 459 THEN 'Circulatory System'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 460 AND 519 THEN 'Respiratory System'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 520 AND 579 THEN 'Digestive System'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 580 AND 629 THEN 'Genitourinary System'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 630 AND 679 THEN 'Pregnancy & Childbirth'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 680 AND 709 THEN 'Skin & Subcutaneous'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 710 AND 739 THEN 'Musculoskeletal System'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 740 AND 759 THEN 'Congenital Anomalies'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 760 AND 779 THEN 'Perinatal Period'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 780 AND 799 THEN 'Symptoms & Ill-defined'
+            WHEN SAFE_CAST(diag_1_clean AS FLOAT64) BETWEEN 800 AND 999 THEN 'Injury & Poisoning'
+            WHEN diag_1_clean LIKE 'V%' THEN 'Supplementary Codes - V'
+            WHEN diag_1_clean LIKE 'E%' THEN 'Supplementary Codes - E'
+            ELSE 'Unknown/Other'
+        END AS diag_1_category,
+        CASE
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 1 AND 139 THEN 'Infectious & Parasitic'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 140 AND 239 THEN 'Neoplasms'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 240 AND 279 THEN 'Endocrine & Nutritional'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 280 AND 289 THEN 'Blood & Immune'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 290 AND 319 THEN 'Mental Disorders'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 320 AND 389 THEN 'Nervous System'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 390 AND 459 THEN 'Circulatory System'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 460 AND 519 THEN 'Respiratory System'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 520 AND 579 THEN 'Digestive System'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 580 AND 629 THEN 'Genitourinary System'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 630 AND 679 THEN 'Pregnancy & Childbirth'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 680 AND 709 THEN 'Skin & Subcutaneous'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 710 AND 739 THEN 'Musculoskeletal System'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 740 AND 759 THEN 'Congenital Anomalies'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 760 AND 779 THEN 'Perinatal Period'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 780 AND 799 THEN 'Symptoms & Ill-defined'
+             WHEN SAFE_CAST(diag_2_clean AS FLOAT64) BETWEEN 800 AND 999 THEN 'Injury & Poisoning'
+             WHEN diag_2_clean LIKE 'V%' THEN 'Supplementary Codes - V'
+             WHEN diag_2_clean LIKE 'E%' THEN 'Supplementary Codes - E'
+             ELSE 'Unknown/Other'
+        END AS diag_2_category,
+        CASE
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 1 AND 139 THEN 'Infectious & Parasitic'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 140 AND 239 THEN 'Neoplasms'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 240 AND 279 THEN 'Endocrine & Nutritional'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 280 AND 289 THEN 'Blood & Immune'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 290 AND 319 THEN 'Mental Disorders'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 320 AND 389 THEN 'Nervous System'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 390 AND 459 THEN 'Circulatory System'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 460 AND 519 THEN 'Respiratory System'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 520 AND 579 THEN 'Digestive System'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 580 AND 629 THEN 'Genitourinary System'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 630 AND 679 THEN 'Pregnancy & Childbirth'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 680 AND 709 THEN 'Skin & Subcutaneous'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 710 AND 739 THEN 'Musculoskeletal System'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 740 AND 759 THEN 'Congenital Anomalies'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 760 AND 779 THEN 'Perinatal Period'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 780 AND 799 THEN 'Symptoms & Ill-defined'
+            WHEN SAFE_CAST(diag_3_clean AS FLOAT64) BETWEEN 800 AND 999 THEN 'Injury & Poisoning'
+            WHEN diag_3_clean LIKE 'V%' THEN 'Supplementary Codes - V'
+            WHEN diag_3_clean LIKE 'E%' THEN 'Supplementary Codes - E'
+            ELSE 'Unknown/Other'
+        END AS diag_3_category
+    FROM `my-project-1999-467013.Hospital_readmission.diabetic_data`
+)
+SELECT
+    * EXCEPT(weight, weight_clean, race, medical_specialty, diag_1, diag_2, diag_3, readmitted, payer_code, payer_code_clean, medical_specialty_clean, diag_1_clean, diag_2_clean, diag_3_clean),
+    -- Select the new cleaned and grouped columns
+    diag_1_category,
+    diag_2_category,
+    diag_3_category
+FROM icd_grouping;
+
+========================================================================================================================================================================
+-- Section 3: Descriptive Analysis
+-- Purpose: Run queries to understand patient demographics and key metrics. 
+========================================================================================================================================================================
+
+-- 3.1 Demographic Analysis: Patient Counts by Age, Race, and Gender
+-- This query provides a comprehensive overview of the patient population demographics.
+
+SELECT
+    age,
+    race_clean,
+    gender_clean,
+    COUNT(DISTINCT patient_nbr) AS unique_patients,
+    COUNT(*) AS total_visits,
+    ROUND(COUNT(*) * 100 / SUM(COUNT(*)) OVER(), 2) AS visit_percentage
+FROM `my-project-1999-467013.Hospital_readmission.final_analysis_table`
+GROUP BY age, race_clean, gender_clean
+ORDER BY total_visits DESC;
+
+
+-- 3.2 Readmission Analysis: Total Readmissions & Rates
+-- This query provides key insights into patient readmission trends.
+
+SELECT
+    readmitted_clean,
+    COUNT(DISTINCT patient_nbr) AS unique_patients,
+    COUNT(*) AS total_visits,
+    ROUND(COUNT(DISTINCT patient_nbr) * 100 / SUM(COUNT(DISTINCT patient_nbr)) OVER(), 2) AS unique_patient_percentage,
+    ROUND(COUNT(*) * 100 / SUM(COUNT(*)) OVER(), 2) AS visit_percentage
+FROM `my-project-1999-467013.Hospital_readmission.final_analysis_table`
+GROUP BY readmitted_clean
+ORDER BY total_visits DESC;
+
+-- 3.3 Diagnosis Analysis: Top Most Common Diagnoses
+-- This query identifies the most common diagnosis categories in the dataset,
+-- combining all three diagnosis fields (diag_1, diag_2, diag_3).
+SELECT
+    diag_category,
+    COUNT(*) AS count,
+    ROUND(COUNT(*) * 100 / SUM(COUNT(*)) OVER(), 2) AS percent
+FROM (
+    SELECT diag_1_category AS diag_category FROM `my-project-1999-467013.Hospital_readmission.final_analysis_table`
+    UNION ALL
+    SELECT diag_2_category AS diag_category FROM `my-project-1999-467013.Hospital_readmission.final_analysis_table`
+    UNION ALL
+    SELECT diag_3_category AS diag_category FROM `my-project-1999-467013.Hospital_readmission.final_analysis_table`
+)
+GROUP BY diag_category
+ORDER BY count DESC
+LIMIT 20;
