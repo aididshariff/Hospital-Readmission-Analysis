@@ -38,7 +38,7 @@ This repository showcases the following key metrics and insights derived from th
 🎓 *Bachelor of Economics and Statistics*, University of Nairobi (Expected Sep 2025)  
 📫 sharifaidid4@gmail.com  
 🔗 [LinkedIn](https://linkedin.com/in/aididalwi)  
-📊 [Tableau Dashboard](https://public.tableau.com/app/profile/aidid.alwi)  
+📊 [Tableau](https://public.tableau.com/app/profile/aidid.alwi)  
 🎓 Google Data Analytics Certificate | R Programming (MindLuster)  
 🗣️ Languages: English, Arabic, Swahili
 
