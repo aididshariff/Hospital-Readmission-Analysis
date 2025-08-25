@@ -4,6 +4,7 @@ This project is an end-to-end data analysis and business intelligence case study
 # Project Objectives
 **Data Cleaning & Quality Assessment** : Thoroughly clean a raw hospital dataset, handling missing values, inconsistencies, and duplicates.
 **Data Transformation** : Engineer new features by grouping complex ICD-9 diagnosis codes into more readable, high-level categories.
+**Key Performance Indicator (KPI) Calculation**: Develop core business metrics such as Readmission Rate and High-Risk Patient percentages using Tableau.  
 **Descriptive Analysis** : Perform exploratory analysis to uncover trends related to patient demographics, diagnosis types, and length of stay.
 **Data Visualization** : Prepare a clean dataset suitable for ** Tableau ** to create a comprehensive, interactive dashboard.
 
