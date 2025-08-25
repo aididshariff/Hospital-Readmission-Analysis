@@ -19,10 +19,10 @@ This project is an end-to-end data analysis and business intelligence case study
 4. ## Final Analysis Table: A final, comprehensive table is generated for all subsequent analysis and visualization, including all cleaned and transformed fields.
 
 # Key Findings & KPIs
-## - This repository showcases the following key metrics and insights derived from the dataset:
-## - Overall Readmission Rate: The total percentage of patients readmitted.
-## - Total Patients: The total count of unique patients in the dataset.
-## - High-Risk Patients: A specific metric identifying the number and percentage of patients readmitted more than once.
-## - Top Readmission Diagnoses: Identification of the primary medical conditions driving readmissions.
-## - Demographic Insights ## : Analysis of readmission rates and patient counts across different age groups, genders, and races.
+This repository showcases the following key metrics and insights derived from the dataset:
+** - Overall Readmission Rate: ** The total percentage of patients readmitted.
+** - Total Patients: **  The total count of unique patients in the dataset.
+** - High-Risk Patients: ** A specific metric identifying the number and percentage of patients readmitted more than once.
+** - Top Readmission Diagnoses: ** Identification of the primary medical conditions driving readmissions.
+** - Demographic Insights: ** Analysis of readmission rates and patient counts across different age groups, genders, and races.
 
